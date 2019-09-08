@@ -2,7 +2,7 @@
 
 An implementation of the four rooms environment used in Sutton et al. 1999.
 
-![alt text](https://raw.githubusercontent.com/howardh/gym_fourrooms/master/fourrooms.png "Four Rooms")
+![alt text](https://raw.githubusercontent.com/howardh/gym-fourrooms/master/fourrooms.png "Four Rooms")
 
 # Installation
 
