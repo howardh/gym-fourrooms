@@ -78,7 +78,7 @@ class FourRoomsEnv(gym.Env):
 
     def reset(self):
         pos_index = np.random.randint(0,len(self.coords))
-        goal_index = np.random.randint(0,len(self.coords))
+        goal_index = np.random.randint(0,len(self.coords)-1)
         if goal_index >= pos_index:
             goal_index += 1
         self.pos = self.coords[pos_index][:]
