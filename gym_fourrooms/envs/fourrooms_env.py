@@ -18,10 +18,12 @@ x     x     x
 x           x
 x     x     x
 xxxxxxxxxxxxx"""
-env_map = []
-for row in four_rooms_map.split('\n')[1:]:
-    env_map.append([r==' ' for r in row])
-env_map = np.array(env_map)
+def string_to_bool_map(str_map):
+    bool_map = []
+    for row in str_map.split('\n')[1:]:
+        bool_map.append([r==' ' for r in row])
+    return np.array(bool_map)
+env_map = string_to_bool_map(four_rooms_map)
 
 directions = [
         np.array([-1,0]),
@@ -47,16 +49,19 @@ def print_state(m,pos=None,goal=None):
 class FourRoomsEnv(gym.Env):
     metadata = {'render.modes': ['human']}
     def __init__(self,fail_prob=1/3, env_map=env_map):
-        self.env_map = env_map
+        if type(env_map) is str:
+            self.env_map = string_to_bool_map(env_map)
+        else:
+            self.env_map = env_map
         self.coords = []
-        for y in range(env_map.shape[0]):
-            for x in range(env_map.shape[1]):
-                if env_map[y,x]:
+        for y in range(self.env_map.shape[0]):
+            for x in range(self.env_map.shape[1]):
+                if self.env_map[y,x]:
                     self.coords.append(np.array([y,x]))
 
         self.fail_prob = fail_prob
         self.action_space = gym.spaces.Discrete(4)
-        self.observation_space = gym.spaces.Box(low=np.array([0,0]),high=np.array(env_map.shape))
+        self.observation_space = gym.spaces.Box(low=np.array([0,0]),high=np.array(self.env_map.shape))
 
     def step(self, action):
         if np.random.rand() < self.fail_prob*4/3:
