@@ -4,7 +4,7 @@ python:
   - "3.8"
 # command to install dependencies
 install:
-  - pip install -r gym pytest
+  - pip install gym pytest
   - pip install -e .
 # command to run tests
 script:
