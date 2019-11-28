@@ -98,7 +98,7 @@ class FourRoomsEnv(gym.Env):
         # Update counts
         if self.goal_duration_steps is not None:
             self.step_count += 1
-            if self.step_count % self.goal_duration_steps == 0:
+            if self.step_count >= self.goal_duration_steps:
                 self.step_count = 0
                 self.reset_goal()
         # Return updated states

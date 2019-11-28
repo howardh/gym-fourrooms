@@ -54,3 +54,20 @@ def test_goal_change_every_episode():
     assert g1 is g2
     assert g2 is not g3
     assert g3 is g4
+
+def test_goal_never_change():
+    env = FourRoomsEnv(goal_duration_episodes=float('inf'))
+    env.reset()
+    g0 = env.goal
+    env.step(env.action_space.sample())
+    g1 = env.goal
+    env.step(env.action_space.sample())
+    g2 = env.goal
+    env.reset()
+    g3 = env.goal
+    env.step(env.action_space.sample())
+    g4 = env.goal
+    assert g0 is g1
+    assert g1 is g2
+    assert g2 is g3
+    assert g3 is g4
