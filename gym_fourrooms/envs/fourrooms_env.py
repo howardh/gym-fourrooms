@@ -90,7 +90,6 @@ class FourRoomsEnv(gym.Env):
             reward = 1
             done = True
             self.pos = None
-            self.goal = None
         else:
             reward = 0
             done = False
@@ -118,14 +117,18 @@ class FourRoomsEnv(gym.Env):
             self.episode_count += 1
         return np.array([self.pos[0],self.pos[1],self.goal[0],self.goal[1]])
 
-    def reset_goal(self):
-        if self.pos is None:
-            goal_index = np.random.randint(0,len(self.coords))
+    def reset_goal(self, goal=None):
+        if goal is not None:
+            self.goal = goal[:]
         else:
-            goal_index = np.random.randint(0,len(self.coords)-1)
-            if (self.coords[goal_index] == self.pos).all():
-                goal_index = len(self.coords)-1
-        self.goal = self.coords[goal_index][:]
+            print('Goal change')
+            if self.pos is None:
+                goal_index = np.random.randint(0,len(self.coords))
+            else:
+                goal_index = np.random.randint(0,len(self.coords)-1)
+                if (self.coords[goal_index] == self.pos).all():
+                    goal_index = len(self.coords)-1
+            self.goal = self.coords[goal_index][:]
 
     def reset_pos(self):
         if self.goal is None:
