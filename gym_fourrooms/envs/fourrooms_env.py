@@ -48,7 +48,9 @@ def print_state(m,pos=None,goal=None):
 
 class FourRoomsEnv(gym.Env):
     metadata = {'render.modes': ['human']}
-    def __init__(self,fail_prob=1/3, env_map=env_map):
+    def __init__(self,fail_prob=1/3, env_map=env_map,
+            goal_duration_steps=None, goal_duration_episodes=None):
+        # Process env map
         if type(env_map) is str:
             self.env_map = string_to_bool_map(env_map)
         else:
@@ -59,11 +61,25 @@ class FourRoomsEnv(gym.Env):
                 if self.env_map[y,x]:
                     self.coords.append(np.array([y,x]))
 
+        # Process other params
         self.fail_prob = fail_prob
         self.action_space = gym.spaces.Discrete(4)
         self.observation_space = gym.spaces.Box(low=np.array([0,0]),high=np.array(self.env_map.shape))
 
+        if goal_duration_steps is None and goal_duration_episodes is None:
+            goal_duration_episodes = 1
+        elif goal_duration_steps is not None and goal_duration_episodes is not None:
+            raise ValueError('Both goal_duration_steps and goal_duration_episodes were assigned values. Only one can be used at a time.')
+        self.goal_duration_steps = goal_duration_steps
+        self.goal_duration_episodes = goal_duration_episodes
+        self.step_count = 0
+        self.episode_count = 0
+
+        self.pos = None
+        self.goal = None
+
     def step(self, action):
+        # Update state
         if np.random.rand() < self.fail_prob*4/3:
             action = self.action_space.sample()
         p = self.pos+directions[action]
@@ -79,16 +95,46 @@ class FourRoomsEnv(gym.Env):
             reward = 0
             done = False
         info = {}
+        # Update counts
+        if self.goal_duration_steps is not None:
+            self.step_count += 1
+            if self.step_count % self.goal_duration_steps == 0:
+                self.step_count = 0
+                self.reset_goal()
+        # Return updated states
         return obs, reward, done, info
 
     def reset(self):
-        pos_index = np.random.randint(0,len(self.coords))
-        goal_index = np.random.randint(0,len(self.coords)-1)
-        if goal_index >= pos_index:
-            goal_index += 1
-        self.pos = self.coords[pos_index][:]
-        self.goal = self.coords[goal_index][:]
+        self.reset_pos()
+        # Check of goal state needs to be changes
+        if self.goal is None:
+            self.reset_goal()
+        if self.goal_duration_steps is None and self.goal_duration_episodes is None:
+            self.reset_goal()
+        elif self.goal_duration_episodes is not None:
+            if self.episode_count >= self.goal_duration_episodes:
+                self.reset_goal()
+                self.episode_count = 0
+            self.episode_count += 1
         return np.array([self.pos[0],self.pos[1],self.goal[0],self.goal[1]])
+
+    def reset_goal(self):
+        if self.pos is None:
+            goal_index = np.random.randint(0,len(self.coords))
+        else:
+            goal_index = np.random.randint(0,len(self.coords)-1)
+            if (self.coords[goal_index] == self.pos).all():
+                goal_index = len(self.coords)-1
+        self.goal = self.coords[goal_index][:]
+
+    def reset_pos(self):
+        if self.goal is None:
+            pos_index = np.random.randint(0,len(self.coords))
+        else:
+            pos_index = np.random.randint(0,len(self.coords)-1)
+            if (self.coords[pos_index] == self.goal).all():
+                pos_index = len(self.coords)-1
+        self.pos = self.coords[pos_index][:]
 
     def render(self, mode='human'):
         print_state(self.env_map,self.pos,self.goal)
