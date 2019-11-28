@@ -2,8 +2,6 @@ import gym
 from gym.utils import seeding
 import numpy as np
 
-# TODO: Seed RNG
-
 four_rooms_map = """
 xxxxxxxxxxxxx
 x     x     x
@@ -78,9 +76,11 @@ class FourRoomsEnv(gym.Env):
         self.pos = None
         self.goal = None
 
+        self.seed()
+
     def step(self, action):
         # Update state
-        if np.random.rand() < self.fail_prob*4/3:
+        if self.rand.rand() < self.fail_prob*4/3:
             action = self.action_space.sample()
         p = self.pos+directions[action]
         if self.env_map[p[0],p[1]]:
@@ -122,21 +122,25 @@ class FourRoomsEnv(gym.Env):
             self.goal = goal[:]
         else:
             if self.pos is None:
-                goal_index = np.random.randint(0,len(self.coords))
+                goal_index = self.rand.randint(0,len(self.coords))
             else:
-                goal_index = np.random.randint(0,len(self.coords)-1)
+                goal_index = self.rand.randint(0,len(self.coords)-1)
                 if (self.coords[goal_index] == self.pos).all():
                     goal_index = len(self.coords)-1
             self.goal = self.coords[goal_index][:]
 
     def reset_pos(self):
         if self.goal is None:
-            pos_index = np.random.randint(0,len(self.coords))
+            pos_index = self.rand.randint(0,len(self.coords))
         else:
-            pos_index = np.random.randint(0,len(self.coords)-1)
+            pos_index = self.rand.randint(0,len(self.coords)-1)
             if (self.coords[pos_index] == self.goal).all():
                 pos_index = len(self.coords)-1
         self.pos = self.coords[pos_index][:]
+
+    def seed(self, seed=None):
+        self.rand,_ = seeding.np_random(seed)
+        self.action_space.np_random.seed(seed)
 
     def render(self, mode='human'):
         print_state(self.env_map,self.pos,self.goal)

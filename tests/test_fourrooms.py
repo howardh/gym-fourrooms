@@ -71,3 +71,25 @@ def test_goal_never_change():
     assert g1 is g2
     assert g2 is g3
     assert g3 is g4
+
+def test_seed():
+    env0 = FourRoomsEnv()
+    env0.seed(0)
+    env1 = FourRoomsEnv()
+    env1.seed(0)
+
+    term = True
+
+    for _ in range(10):
+        if term:
+            x0 = env0.reset()
+            x1 = env1.reset()
+            assert (x0 == x1).all()
+        else:
+            a0 = env0.action_space.sample()
+            a1 = env1.action_space.sample()
+            assert a0 == a1
+
+            x0,r,term,_ = env0.step(a0)
+            x1,r,term,_ = env1.step(a1)
+            assert (x0 == x1).all()
