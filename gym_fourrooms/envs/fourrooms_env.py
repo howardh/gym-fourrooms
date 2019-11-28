@@ -121,7 +121,6 @@ class FourRoomsEnv(gym.Env):
         if goal is not None:
             self.goal = goal[:]
         else:
-            print('Goal change')
             if self.pos is None:
                 goal_index = np.random.randint(0,len(self.coords))
             else:
