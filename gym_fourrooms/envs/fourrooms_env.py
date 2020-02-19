@@ -148,3 +148,33 @@ class FourRoomsEnv(gym.Env):
     def close(self):
         self.pos = None
         self.goal = None
+
+    def state_dict(self):
+        return {
+                'env_map': self.env_map,
+                'coords': self.coords,
+                'fail_prob': self.fail_prob,
+                'action_space': self.action_space,
+                'observation_space': self.observation_space,
+                'goal_duration_episodes': self.goal_duration_episodes,
+                'goal_duration_steps': self.goal_duration_steps,
+                'episode_count': self.episode_count,
+                'step_count': self.step_count,
+                'pos': self.pos,
+                'goal': self.goal,
+                'rand': self.rand.get_state()
+        }
+
+    def load_state_dict(self,state):
+        self.env_map = state['env_map']
+        self.coords = state['coords']
+        self.fail_prob = state['fail_prob']
+        self.action_space = state['action_space']
+        self.observation_space = state['observation_space']
+        self.goal_duration_steps = state['goal_duration_steps']
+        self.goal_duration_episodes = state['goal_duration_episodes']
+        self.episode_count = state['episode_count']
+        self.step_count = state['step_count']
+        self.pos = state['pos']
+        self.goal = state['goal']
+        self.rand.set_state(state['rand'])

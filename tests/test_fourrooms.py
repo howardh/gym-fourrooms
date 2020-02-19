@@ -93,3 +93,41 @@ def test_seed():
             x0,r,term,_ = env0.step(a0)
             x1,r,term,_ = env1.step(a1)
             assert (x0 == x1).all()
+
+def test_state_dict():
+    env0 = FourRoomsEnv()
+    env1 = FourRoomsEnv()
+    env2 = FourRoomsEnv()
+
+    state = env0.state_dict()
+
+    def sample_chain(env, steps):
+        output = []
+        term = True
+        for _ in range(steps):
+            if term:
+                x = env.reset()
+                output.append(x)
+            else:
+                a = env.action_space.sample()
+                output.append(a)
+                x,r,term,_ = env.step(a)
+                output.append(x)
+        return output
+
+    x0 = sample_chain(env0,10)
+
+    env1.load_state_dict(state)
+    x1 = sample_chain(env1,10)
+    assert all([(a == b).all() for a,b in zip(x0,x1)])
+
+    env1.load_state_dict(state)
+    x1 = sample_chain(env1,10)
+    assert all([(a == b).all() for a,b in zip(x0,x1)])
+
+    x2 = sample_chain(env2,10)
+    assert any([(a != b).any() for a,b in zip(x0,x2)])
+
+    env2.load_state_dict(state)
+    x2 = sample_chain(env2,10)
+    assert all([(a == b).all() for a,b in zip(x0,x2)])
