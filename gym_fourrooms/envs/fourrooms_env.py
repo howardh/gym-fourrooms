@@ -62,7 +62,7 @@ class FourRoomsEnv(gym.Env):
         # Process other params
         self.fail_prob = fail_prob
         self.action_space = gym.spaces.Discrete(4)
-        self.observation_space = gym.spaces.Box(low=np.array([0,0], dtype=np.float32),high=np.array(self.env_map.shape, dtype=np.float32))
+        self.observation_space = gym.spaces.Box(low=np.array([0,0,0,0], dtype=np.float32),high=np.array(self.env_map.shape*2, dtype=np.float32))
 
         if goal_duration_steps is None and goal_duration_episodes is None:
             goal_duration_episodes = 1
