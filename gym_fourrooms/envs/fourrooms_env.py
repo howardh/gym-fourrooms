@@ -45,9 +45,33 @@ def print_state(m,pos=None,goal=None):
         print()
 
 class FourRoomsEnv(gym.Env):
+    """
+    Attributes:
+        available_goals: A list of coordinates that can be used as goal states.
+        fail_prob: Probability of an action failing.
+            When an action fails, the agent will instead move in one of two adjacent directions, but not in the opposite direction.
+    """
     metadata = {'render.modes': ['human']}
     def __init__(self,fail_prob=1/3, env_map=env_map,
-            goal_duration_steps=None, goal_duration_episodes=None):
+            goal_duration_steps=None, goal_duration_episodes=None,
+            goal_repeat_allowed=False):
+        """
+        Args:
+            fail_prob: Probability of an action failing.
+                When an action fails, the resulting movement is randomly chosen between the 
+                three other possible directions.
+            env_map: A string representation of the map.
+                Each row of the map is separated by a newline character '\\n'.
+                Obstacles are marked by 'x' and open space is marked by ' '.
+            goal_duration_steps: Number of steps taken before the goal state changes.
+                The goal state changes immediately when this step count is reached, and
+                can happen in the middle of an episode.
+                Only one of `goal_duration_steps` and `goal_duration_episodes` can be set.
+            goal_duration_episodes: Number of episodes completed before the goal state changes.
+                Only one of `goal_duration_steps` and `goal_duration_episodes` can be set.
+            goal_repeat_allowed: If True, then the same goal state can be chosen twice in a row.
+                If False, then consecutive goal choices are guaranteed to be different.
+        """
         # Process env map
         if type(env_map) is str:
             self.env_map = string_to_bool_map(env_map)
@@ -56,11 +80,16 @@ class FourRoomsEnv(gym.Env):
         self.coords = []
         for y in range(self.env_map.shape[0]):
             for x in range(self.env_map.shape[1]):
-                if self.env_map[y,x]:
+                if self.env_map[y,x]: # If it's an open space
                     self.coords.append(np.array([y,x]))
+
+        # Any open space in the map can be a goal for the agent
+        # This can be modified directly to change the available goals
+        self.available_goals = self.coords
 
         # Process other params
         self.fail_prob = fail_prob
+        self.goal_repeat_allowed = goal_repeat_allowed
         self.action_space = gym.spaces.Discrete(4)
         self.observation_space = gym.spaces.Box(low=np.array([0,0,0,0], dtype=np.float32),high=np.array(self.env_map.shape*2, dtype=np.float32))
 
@@ -121,13 +150,13 @@ class FourRoomsEnv(gym.Env):
         if goal is not None:
             self.goal = goal[:]
         else:
-            if self.pos is None:
-                goal_index = self.rand.randint(0,len(self.coords))
+            if self.pos is None or self.goal_repeat_allowed:
+                goal_index = self.rand.randint(0,len(self.available_goals))
             else:
-                goal_index = self.rand.randint(0,len(self.coords)-1)
-                if (self.coords[goal_index] == self.pos).all():
-                    goal_index = len(self.coords)-1
-            self.goal = self.coords[goal_index][:]
+                goal_index = self.rand.randint(0,len(self.available_goals)-1)
+                if (self.available_goals[goal_index] == self.pos).all():
+                    goal_index = len(self.available_goals)-1
+            self.goal = self.available_goals[goal_index][:]
 
     def reset_pos(self):
         if self.goal is None:
@@ -153,6 +182,7 @@ class FourRoomsEnv(gym.Env):
         return {
                 'env_map': self.env_map,
                 'coords': self.coords,
+                'available_goals': self.available_goals,
                 'fail_prob': self.fail_prob,
                 'action_space': self.action_space,
                 'observation_space': self.observation_space,
@@ -168,6 +198,7 @@ class FourRoomsEnv(gym.Env):
     def load_state_dict(self,state):
         self.env_map = state['env_map']
         self.coords = state['coords']
+        self.available_goals = state['available_goals']
         self.fail_prob = state['fail_prob']
         self.action_space = state['action_space']
         self.observation_space = state['observation_space']
