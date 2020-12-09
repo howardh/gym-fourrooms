@@ -169,7 +169,7 @@ class FourRoomsEnv(gym.Env):
 
     def seed(self, seed=None):
         self.rand = np.random.RandomState(seed)
-        self.action_space.np_random = self.rand
+        self.action_space._np_random = self.rand
 
     def render(self, mode='human'):
         print_state(self.env_map,self.pos,self.goal)
@@ -209,4 +209,4 @@ class FourRoomsEnv(gym.Env):
         self.pos = state['pos']
         self.goal = state['goal']
         self.rand.set_state(state['rand'])
-        self.action_space.np_random = self.rand
+        self.action_space._np_random = self.rand
